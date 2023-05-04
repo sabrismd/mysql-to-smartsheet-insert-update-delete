@@ -89,7 +89,7 @@ def skip():
 
 ###
 
-if len(sheet_rows)==0:
+if not sheet_rows:
     print("The sheet is empty so the program is about to insert the records to the sheet")
     insert()
     print("Inserted Successfully")
