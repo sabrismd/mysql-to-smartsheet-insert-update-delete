@@ -23,6 +23,7 @@ sheet_id=config['dev']['smartsheet']['sheet_id']
 sheet=ss.Sheets.get_sheet(sheet_id)
 query = f"SELECT * FROM {mysql_table}"
 df=pd.read_sql(query,connection)
+df=df.replace(r'^\s*$',0,regex=True)
 sheet_rows=sheet.rows
 
 
@@ -58,7 +59,7 @@ def delete():
 ###
 # Updating #
 def update():
-    sheet_rows = sheet.rows
+    rows_to_update = []
     for index, row in df.iterrows():
         for sheet_row in sheet_rows:
             if sheet_row.row_number == index+1:
@@ -75,21 +76,20 @@ def update():
                         'id': sheet_row.id,
                         'cells': cells_to_update
                     })
-                    ss.Sheets.update_rows(sheet_id, [updated_row])
-                    print(f"Row {index+1} updated successfully")
+                    rows_to_update.append(updated_row)
                     break
+    if rows_to_update:
+        ss.Sheets.update_rows(sheet_id, rows_to_update)
+        print("Updated successfully")
+    else:
+        print("No rows to update! So, Skipping the Update Operation")
                     
 ###
 
 # Skipping the operations
-def skip():
-######
-
-
-
 ###
 
-if not sheet_rows:
+if(not sheet_rows)and(not df.empty):
     print("The sheet is empty so the program is about to insert the records to the sheet")
     insert()
     print("Inserted Successfully")
@@ -97,18 +97,11 @@ elif df.empty:
     print("your mysql doesnot have records so the program is about to delete the sheet record")
     delete()
     print("deleted successfully")
-    for row in sheet_rows:
-        ss.Sheets.delete_rows(sheet_id,[row.id])
 else:
-    if skip():
-        print("could not insert datas")
-        print("The MySQL table and sheet are already in sync. No updates needed.")
-    else:
-        print("Checking for any updates of cells")
-        update()
-        print("some rows are updated")
-    
-    
+    print("There Could be a Possibility of Updating the Sheet Cells")
+    print("Comparing the Sheet with mysql records")
+    update()
+    print("processed")
 
 
 
