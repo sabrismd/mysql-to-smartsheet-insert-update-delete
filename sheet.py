@@ -83,15 +83,7 @@ def update():
 
 # Skipping the operations
 def skip():
-    sheet_rows = sheet.rows
-    if len(df) != len(sheet_rows):
-        return False
-    for index, row in df.iterrows():
-        sheet_row = sheet_rows[index]
-        for col in sheet.columns:
-            if col.title in row.index and str(row[col.title]) != sheet_row.get_column(col.id).value:
-                return False
-    return True
+######
 
 
 
