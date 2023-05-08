@@ -1,11 +1,11 @@
 import mysql.connector
 import smartsheet
 import pandas as pd
-import json
+import json as js
 
 #load configuration file 
 
-config = json.load(open('C:/Users/Elcot/Desktop/SmartSheet I U D/config.json'))
+config = js.load(open('C:/Users/Elcot/Desktop/SmartSheet I U D/config.json'))
 
 #sql connection
 connection = mysql.connector.connect(host=config['dev']['mysql']['host'],
