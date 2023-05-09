@@ -162,5 +162,9 @@ def update():
         
 #this update function will compare the dataframes from mysql and sheets row by row and checks the cell value of each as it same to the #mysql dataframes if it not same it will proceed further and finally the program will show updated succesfully if there is updation
 #otherwise it show no rows to update because of the same records those are not mismatching
+![image](https://user-images.githubusercontent.com/90912183/237022788-124848d7-a2a9-46ef-883b-20d2d31a61ad.png)
+#above image row 6 of employee were changed , when i perform the update() it will  change the value according to the mysql
+#after changed
+![image](https://user-images.githubusercontent.com/90912183/237023474-223bba25-fbee-4043-bfdc-c9dc6a95cd9f.png)
 
 
