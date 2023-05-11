@@ -1,0 +1,21 @@
+{
+  "environment": "dev",
+  "dev": {
+    "mysql": {
+      "host": "",
+      "port": "",
+      "username": "",
+      "password": "",
+      "databaseName": ""
+    },
+    "smartsheet": {
+      "access_token": "",
+	  "sheet_id":""
+    },
+    "sync":{
+        "mysqlTable": "",
+        "smartsheet": ""
+      }
+  }
+}
+			
