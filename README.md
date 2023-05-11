@@ -1,8 +1,9 @@
 # mysql-to-smartsheet-insert-update-delete
 This Project is Based on Automating the insertion/deletion/updation of sheets with the mysql reterieval
 
-#first i am importing the necessary packages 
-![image](https://user-images.githubusercontent.com/90912183/236824480-78196580-f9d3-4ffe-b600-99d20ad44b9e.png)
+# first of all install the required packages by typing 
+"pip install -r Requirements.txt"
+
 
 
 #then loading the configuration file 
