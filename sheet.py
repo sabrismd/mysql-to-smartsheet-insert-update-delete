@@ -7,21 +7,27 @@ import json as js
 
 config = js.load(open('config.json'))
 
-#sql connection
-connection = mysql.connector.connect(host=config['dev']['mysql']['host'],
-                             user=config['dev']['mysql']['username'],
-                             password=config['dev']['mysql']['password'],
-                             db=config['dev']['mysql']['databaseName'])
+#configuring the mysql to make connection to the server
+MysqlConfig=config['dev']['mysql']
 
-for table in config['dev']['sync']:
-    mysql_table = table['mysqlTable']
+# configuring for smartsheet
+SheetConfig=config['dev']['smartsheet']
+
+# configuration for accessing the mysql table
+MysqlTableConfig =config['dev']['sync']['mysqlTable']
+
+#sql connection
+connection = mysql.connector.connect(host=MysqlConfig['host'],
+                             user=MysqlConfig['username'],
+                             password=MysqlConfig['password'],
+                             db=MysqlConfig['databaseName'])
     
     
-at=config['dev']['smartsheet']['access_token']
-ss=smartsheet.Smartsheet(at)
-sheet_id=config['dev']['smartsheet']['sheet_id']
-sheet=ss.Sheets.get_sheet(sheet_id)
-query = f"SELECT * FROM {mysql_table}"
+AccessToken=SheetConfig['access_token']
+SheetClient=smartsheet.Smartsheet(AccessToken)
+sheet_id=SheetConfig['sheet_id']
+sheet=SheetClient.Sheets.get_sheet(sheet_id)
+query = f"SELECT * FROM {MysqlTableConfig}" # if your table records are more you can use the limit and offset keys in the query variable
 df=pd.read_sql(query,connection)
 df=df.replace(r'^\s*$',0,regex=True)
 sheet_rows=sheet.rows
