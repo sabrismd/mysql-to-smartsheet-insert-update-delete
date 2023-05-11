@@ -5,7 +5,7 @@ import json as js
 
 #load configuration file 
 
-config = js.load(open('C:/Users/Elcot/Desktop/SmartSheet I U D/config.json'))
+config = js.load(open('config.json'))
 
 #sql connection
 connection = mysql.connector.connect(host=config['dev']['mysql']['host'],
