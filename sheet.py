@@ -59,11 +59,12 @@ def insert(initial_row_value):
 ###
 
 # Deleting #
-def delete():
-    rows = sheet.rows
-    row_ids = [row.id for row in rows]
-    ss.Sheets.delete_rows(sheet_id, row_ids)
-    print("All rows deleted successfully.")
+def delete(to_be_deleted_row_value):
+    rows=sheet.rows
+    for row in rows:
+        if (str(row.cells[0].value)) == to_be_deleted_row_value :
+            SheetClient.Sheets.delete_rows(sheet_id,row.id)
+            print("row were deleted")
 
 
 ###
@@ -114,15 +115,21 @@ if df.any:
                     print(f"Row {i+1} From MySql is not  Matching to the Sheet Row {i+1}")
                     insert(df_rows[i])
                     print("Inserted")
-elif df.empty:
-    print("your mysql doesnot have records so the program is about to delete the sheet record")
-    delete()
-    print("deleted successfully")
-else:
-    print("There Could be a Possibility of Updating the Sheet Cells")
-    print("Comparing the Sheet with mysql records")
-    update()
-    print("processed")
+        elif len(SheetRows) > len(df_rows):
+            print("Huh!looks Sheet Has extra row which is not in mysql")
+            for k in range(len(SheetRows)):
+                df_rows.append('')
+            for i in range(len(SheetRows)):
+                if SheetRows[i] not in df_rows[i]:
+                    print(f"Row {i+1} From Sheet is not  Matching to the Mysql Row {i+1}")
+                    delete(SheetRows[i])
+                    print("Unnecessary row from smartsheet was deleted")
+        else:
+            print("There Could be a Possibility of Updating the Sheet Cells")
+            print("Comparing the Sheet with mysql records")
+            update()
+            print("Updated")
+
 
 
 
