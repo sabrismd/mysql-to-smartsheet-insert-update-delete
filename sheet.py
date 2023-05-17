@@ -34,23 +34,27 @@ sheet_rows=sheet.rows
 
 
 # Inserting #
-def insert():
-    rows=[]
-    for index,row in df.iterrows():
-        cells=[]
-        for col in sheet.columns:
-            cell=smartsheet.models.Cell({
-            'column_id':col.id,
-            'value':str(row[col.title])
-            })
+def insert(initial_row_value):
+    MysqlLists = [str(row[0]) for index, row in df.iterrows()]
+    init_value=int(initial_row_value)
+    if initial_row_value in MysqlLists:
+        row_values = df[df['id'] == init_value].values.tolist()
+        cells = []
+        col_ids = [col.id for col in sheet.columns]
+        for i in range(len(col_ids)):
+            cell_value = row_values[0][i]
+            cell = smartsheet.models.Cell()
+            cell.column_id=col_ids[i]
+            cell.value=str(cell_value)
             cells.append(cell)
-            new_row=smartsheet.models.Row({
-            'to_top':True,
-            'cells':cells
-            })
-        rows.append(new_row)
-    ss.Sheets.add_rows(sheet_id,rows)
-    print("Recordss successfully inserted")
+        new_row = smartsheet.models.Row()
+        new_row.to_bottom = True
+        new_row.cells = cells
+        response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
+        if response.message == 'SUCCESS':
+            print("Row added successfully.")
+        else:
+            print("Failed to add row.")
     
 ###
 
@@ -95,10 +99,21 @@ def update():
 # Skipping the operations
 ###
 
-if(not sheet_rows)and(not df.empty):
-    print("The sheet is empty so the program is about to insert the records to the sheet")
-    insert()
-    print("Inserted Successfully")
+if df.any:
+        df_rows = [str(row[0]) for index, row in df.iterrows()]
+        SheetRows = [rows.cells[0].value for rows in sheet.rows]
+        print(df_rows)
+        print(SheetRows)
+        print(len(df_rows))
+        print(len(SheetRows))
+        if len(df_rows) > len(SheetRows):
+            for k in range(len(df_rows)):
+                SheetRows.append('')
+            for i in range(len(df_rows)):
+                if df_rows[i] != SheetRows[i]:
+                    print(f"Row {i+1} From MySql is not  Matching to the Sheet Row {i+1}")
+                    insert(df_rows[i])
+                    print("Inserted")
 elif df.empty:
     print("your mysql doesnot have records so the program is about to delete the sheet record")
     delete()
