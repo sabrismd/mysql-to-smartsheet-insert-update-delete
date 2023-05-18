@@ -82,12 +82,14 @@ def update():
                             'value': str(row[col.title])
                         })
                         cells_to_update.append(cell)
+                        col_name=col.title
                 if cells_to_update:
                     updated_row = smartsheet.models.Row({
                         'id': sheet_row.id,
                         'cells': cells_to_update
                     })
                     rows_to_update.append(updated_row)
+                    print(f"Row {sheet_row.row_number} is updated with the column of {col_name}")
                     break
     if rows_to_update:
         ss.Sheets.update_rows(sheet_id, rows_to_update)
@@ -119,10 +121,12 @@ if df.any:
             print("Huh!looks Sheet Has extra row which is not in mysql")
             for k in range(len(SheetRows)):
                 df_rows.append('')
-            for i in range(len(SheetRows)):
-                if SheetRows[i] not in df_rows[i]:
-                    print(f"Row {i+1} From Sheet is not  Matching to the Mysql Row {i+1}")
-                    delete(SheetRows[i])
+            for j in range(len(SheetRows)):
+                if SheetRows[j] in df_rows:
+                    pass
+                else:
+                    print(f"Row {j+1} From Sheet is not  Matching ")
+                    delete(SheetRows[j])
                     print("Unnecessary row from smartsheet was deleted")
         else:
             print("There Could be a Possibility of Updating the Sheet Cells")
