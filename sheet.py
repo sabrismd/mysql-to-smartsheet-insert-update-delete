@@ -7,6 +7,9 @@ import json as js
 
 config = js.load(open('config.json'))
 
+
+#Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
+
 #configuring the mysql to make connection to the server
 MysqlConfig=config['dev']['mysql']
 
@@ -134,8 +137,14 @@ if df.any:
             update()
             print("Updated")
 
-
-
-
-
-
+#loop through data from MYSQL
+    # isDelete = true
+    # check if df_mytsql[id] value in smartsheerts[mysql_id]
+    # if record in smartsheets
+        # update(df.row)
+        # isDelete = false
+    # else if record in mysql
+        # insert(df.row)
+        # isDelete = false
+    # if isDelete
+        # delete(df.row)
