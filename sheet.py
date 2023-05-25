@@ -117,14 +117,16 @@ if df.any:
             if y not in df_rows:
                 delete(y)
                 isDelete=True
-        if isUpdate:
-            print("Sheet Updated With Mysql Table")
+        if isUpdate and isDelete:
+            print("Row(s) deleted from the sheet and also Sheet Updated With Mysql Table")
+        elif isUpdate and isInsert:
+            print('Row(s) inserted to the sheet and also Sheet Updated With Mysql Table')
         elif isInsert:
-            print('Row(s) Inserted to the sheet')
+            print("Rows only Inserted to the sheet")
+        elif isUpdate:
+            print('Sheet Usually Updated')
         elif isDelete:
-            print('Row deleted from the sheet')
-        else:
-            print("no need to do")
+            print("row only deleted from the sheet") 
 
 
 #loop through data from MYSQL
