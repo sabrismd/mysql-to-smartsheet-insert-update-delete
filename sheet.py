@@ -9,15 +9,16 @@ config = js.load(open('config.json'))
 
 
 #Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
+dev=config['dev']
 
 #configuring the mysql to make connection to the server
-MysqlConfig=config['dev']['mysql']
+MysqlConfig=dev['mysql']
 
 # configuring for smartsheet
-SheetConfig=config['dev']['smartsheet']
+SheetConfig=dev['smartsheet']
 
 # configuration for accessing the mysql table
-MysqlTableConfig =config['dev']['sync']['mysqlTable']
+MysqlTableConfig =dev['sync']['mysqlTable']
 
 #sql connection
 connection = mysql.connector.connect(host=MysqlConfig['host'],
@@ -85,20 +86,14 @@ def update():
                             'value': str(row[col.title])
                         })
                         cells_to_update.append(cell)
-                        col_name=col.title
                 if cells_to_update:
                     updated_row = smartsheet.models.Row({
                         'id': sheet_row.id,
                         'cells': cells_to_update
                     })
                     rows_to_update.append(updated_row)
-                    print(f"Row {sheet_row.row_number} is updated with the column of {col_name}")
-                    break
-    if rows_to_update:
-        ss.Sheets.update_rows(sheet_id, rows_to_update)
-        print("Updated successfully")
-    else:
-        print("No rows to update! So, Skipping the Update Operation")
+    SheetClient.Sheets.update_rows(sheet_id, rows_to_update)
+        
                     
 ###
 
@@ -108,34 +103,29 @@ def update():
 if df.any:
         df_rows = [str(row[0]) for index, row in df.iterrows()]
         SheetRows = [rows.cells[0].value for rows in sheet.rows]
-        print(df_rows)
-        print(SheetRows)
-        print(len(df_rows))
-        print(len(SheetRows))
-        if len(df_rows) > len(SheetRows):
-            for k in range(len(df_rows)):
-                SheetRows.append('')
-            for i in range(len(df_rows)):
-                if df_rows[i] != SheetRows[i]:
-                    print(f"Row {i+1} From MySql is not  Matching to the Sheet Row {i+1}")
-                    insert(df_rows[i])
-                    print("Inserted")
-        elif len(SheetRows) > len(df_rows):
-            print("Huh!looks Sheet Has extra row which is not in mysql")
-            for k in range(len(SheetRows)):
-                df_rows.append('')
-            for j in range(len(SheetRows)):
-                if SheetRows[j] in df_rows:
-                    pass
-                else:
-                    print(f"Row {j+1} From Sheet is not  Matching ")
-                    delete(SheetRows[j])
-                    print("Unnecessary row from smartsheet was deleted")
+        isUpdate=False
+        isInsert=False
+        isDelete=False
+        for x in df_rows:
+            if x in SheetRows:
+                update()
+                isUpdate=True
+            elif x not in SheetRows:
+                insert(x)
+                isInsert=True
+        for y in SheetRows:
+            if y not in df_rows:
+                delete(y)
+                isDelete=True
+        if isUpdate:
+            print("Sheet Updated With Mysql Table")
+        elif isInsert:
+            print('Row(s) Inserted to the sheet')
+        elif isDelete:
+            print('Row deleted from the sheet')
         else:
-            print("There Could be a Possibility of Updating the Sheet Cells")
-            print("Comparing the Sheet with mysql records")
-            update()
-            print("Updated")
+            print("no need to do")
+
 
 #loop through data from MYSQL
     # isDelete = true
