@@ -55,11 +55,6 @@ def insert(initial_row_value):
         new_row.to_bottom = True
         new_row.cells = cells
         response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
-        if response.message == 'SUCCESS':
-            print("Row added successfully.")
-        else:
-            print("Failed to add row.")
-    
 ###
 
 # Deleting #
