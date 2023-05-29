@@ -50,32 +50,32 @@ sheet_rows=sheet.rows
 #then the program moves into take decisions according to the respective condition
 
 if df.any:
-        df_rows = [str(row[0]) for index, row in df.iterrows()]
-        SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
-        isUpdate=False
-        isInsert=False
-        isDelete=False
-        for x in df_rows:
-            if x in SheetRows:
-                update()
-                isUpdate=True
-            elif x not in SheetRows:
-                insert(x)
-                isInsert=True
-        for y in SheetRows:
-            if y not in df_rows:
-                delete(y)
-                isDelete=True
-        if isUpdate and isDelete:
-            print("Row(s) deleted from the sheet and also Sheet Updated With Mysql Table")
-        elif isUpdate and isInsert:
-            print('Row(s) inserted to the sheet and also Sheet Updated With Mysql Table')
-        elif isInsert:
-            print("Rows only Inserted to the sheet")
-        elif isUpdate:
-            print('Sheet Usually Updated')
-        elif isDelete:
-            print("row only deleted from the sheet")
+df_rows = [str(row[0]) for index, row in df.iterrows()]
+SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
+isUpdate=False
+isInsert=False
+isDelete=False
+for x in df_rows:
+if x in SheetRows:
+update()
+isUpdate=True
+elif x not in SheetRows:
+insert(x)
+isInsert=True
+for y in SheetRows:
+if y not in df_rows:
+delete(y)
+isDelete=True
+if isUpdate and isDelete:
+print("Row(s) deleted from the sheet and also Sheet Updated With Mysql Table")
+elif isUpdate and isInsert:
+print('Row(s) inserted to the sheet and also Sheet Updated With Mysql Table')
+elif isInsert:
+print("Rows only Inserted to the sheet")
+elif isUpdate:
+print('Sheet Usually Updated')
+elif isDelete:
+print("row only deleted from the sheet")
     
 #the primary if condition is "df.any" , why its for? it checks for dataframes from the mysql table, that should not be empty (i.e)dataframes should always have some records , this condition will never fail, so i put it as primary. 
 
