@@ -6,31 +6,40 @@ This Project is Based on Automating the insertion/deletion/updation of sheets wi
 
 
 
-#then loading the configuration file 
-config = json.load(open('C:/Users/Elcot/Desktop/SmartSheet I U D/config.json'))
+#then load the configuration file 
+config = json.load(open('config.json'))
 
-# making connection to the sql server 
-connection = mysql.connector.connect(host=config['dev']['mysql']['host'],
-                             user=config['dev']['mysql']['username'],
-                             password=config['dev']['mysql']['password'],
-                             db=config['dev']['mysql']['databaseName'])
+#why i am using the config file here for,whenever if we want to change our mysql server or database we dont move into code ,instead of we change the path or anything in the config file itself.
+#assigning new variable for "config['dev']"
+dev=config['dev']
 
-for table in config['dev']['sync']:
-    mysql_table = table['mysqlTable']
+#configuring the mysql to make connection to the server
+MysqlConfig=dev['mysql']
+
+#configuring for smartsheet
+SheetConfig=dev['smartsheet']
+
+#configuration for accessing the mysql table
+MysqlTableConfig =dev['sync']['mysqlTable']
+
+#sql connection
+connection = mysql.connector.connect(host=MysqlConfig['host'],
+                             user=MysqlConfig['username'],
+                             password=MysqlConfig['password'],
+                             db=MysqlConfig['databaseName'])
     
 #accessing the sheet
-at=config['dev']['smartsheet']['access_token']
-ss=smartsheet.Smartsheet(at)
-sheet_id=config['dev']['smartsheet']['sheet_id']
-sheet=ss.Sheets.get_sheet(sheet_id)
-query = f"SELECT * FROM {mysql_table}"
+AccessToken=SheetConfig['access_token']
+SheetClient=smartsheet.Smartsheet(AccessToken)
+sheet_id=SheetConfig['sheet_id']
+sheet=SheetClient.Sheets.get_sheet(sheet_id)
 
-#here i am using pandas library for data visualizing and analysing 
-pandas have a method that is read_sql() inside i must provide the query , and my connection Eg: "pd.read_sql(query,connection)"
+#here i am using pandas library for data visualizing and analysing pandas have a method that is read_sql() inside i must provide the
+query , and my connection Eg: "pd.read_sql(query,connection)"
 
 #by using the pandas i can access the datas 
 
-query = f"SELECT * FROM {mysql_table}"
+query = f"SELECT * FROM {MysqlTableConfig} LIMIT 100 OFFSET 120" # if your table records are more you can use the limit and offset keys in the query variable
 df=pd.read_sql(query,connection)
 df=df.replace(r'^\s*$',0,regex=True)
 sheet_rows=sheet.rows
@@ -38,134 +47,63 @@ sheet_rows=sheet.rows
 #i am applying the regular expression concept because some tables has blank spaces not none values , so i am using the "\s" for blankspace and i am replacing it with the 0 , 
 #why i am using this regular expression is because i could not complete the update function() properly . so  i am using it
 
-
 #then the program moves into take decisions according to the respective condition
 
-if(not sheet_rows)and(not df.empty):
-    print("The sheet is empty so the program is about to insert the records to the sheet")
-    insert()
-    print("Inserted Successfully")
-elif df.empty:
-    print("your mysql doesnot have records so the program is about to delete the sheet record")
-    delete()
-    print("deleted successfully")
-else:
-    print("There Could be a Possibility of Updating the Sheet Cells")
-    print("Comparing the Sheet with mysql records")
-    update()
-    print("processed")
+if df.any:
+        df_rows = [str(row[0]) for index, row in df.iterrows()]
+        SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
+        isUpdate=False
+        isInsert=False
+        isDelete=False
+        for x in df_rows:
+            if x in SheetRows:
+                update()
+                isUpdate=True
+            elif x not in SheetRows:
+                insert(x)
+                isInsert=True
+        for y in SheetRows:
+            if y not in df_rows:
+                delete(y)
+                isDelete=True
+        if isUpdate and isDelete:
+            print("Row(s) deleted from the sheet and also Sheet Updated With Mysql Table")
+        elif isUpdate and isInsert:
+            print('Row(s) inserted to the sheet and also Sheet Updated With Mysql Table')
+        elif isInsert:
+            print("Rows only Inserted to the sheet")
+        elif isUpdate:
+            print('Sheet Usually Updated')
+        elif isDelete:
+            print("row only deleted from the sheet")
     
-#######
+#the primary if condition is "df.any" , why its for? it checks for dataframes from the mysql table, that should not be empty (i.e)dataframes should always have some records , this condition will never fail, so i put it as primary. 
 
-#the first if has two condition one is sheet_rows must be zero and pandas dataframes of the mysql table should not be empty
+#initially sheet has null records
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/7d1ea1cf-8ce6-46a9-b9e1-266d255b941e)
 
-#this sheet has empty values column names only exists
-![image](https://user-images.githubusercontent.com/90912183/237012904-971f86cc-fa8d-4ac1-8a54-5016c2ed6802.png)
+#if the code runs it will take a list of df and list of sheet,both the lists contains the primary value , I am comparing the two lists and performing the functions accordingly.
+#now its prompts us,
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/f91e6a04-e322-4427-9e18-7144b367fc0a)
+#checking the sheet has having,
+#yes records were inserted,
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/bdbb5057-9698-45a9-9c77-c81ec3ebb6a3)
 
-#the code will check the length of the sheet has zero value , then only the first condition of if will be satisfied
-
-#second condition is dataframes from the mysql table should not be empty ...it must have some records then only two condition satisfied using "df.empty" to check whether the gained table has some records or not
-#my second condition of if is satisfied because it has some records
-
-![image](https://user-images.githubusercontent.com/90912183/237012582-8be89604-3fc2-4320-b115-d660c7aed0fa.png)
-
-#now  both the conditions of if are now satisifed the program is about to perform the insert( ) operation
-
-#this is my insert function
-# Inserting #
-def insert():
-    rows=[]
-    for index,row in df.iterrows():
-        cells=[]
-        for col in sheet.columns:
-            cell=smartsheet.models.Cell({
-            'column_id':col.id,
-            'value':str(row[col.title])
-            })
-            cells.append(cell)
-            new_row=smartsheet.models.Row({
-            'to_top':True,
-            'cells':cells
-            })
-        rows.append(new_row)
-    ss.Sheets.add_rows(sheet_id,rows)
-    print("Recordss successfully inserted")
-#inside the insert() first empty "rows" will be created , then iterating into the dataframes by the index and row , inside create the "cells" list
-#and iterating to the sheet columns and creating a cells , those cell values are got from the dataframes table,it will continue to loop until all the columns will got some values 
-#using cell.append() method appending cells to the new rows, if all the values from the dataframes table inserted into the cells , now it is ready to add into the sheets
-# using the row.append(new_row)
-#after all the insertion of data the program in the end will say "records succesfully insereted"
-
-#insert() successfully implemented 
-
-#now i am changing the  table of mysql database which has null records, let's see what happens.
-#i am running the program again, now if is not satisfied because sheet_rows has some records the first condition of if is failed.
-#so the program is about to delete the sheet records because mysql has no records 
-#so it moves into the elif condition it has a condition of dataframes is empty.
-#the elif condition will check whether the dataframes has records or not.
-#according to my condition the second condition will be successfully executed because dataframes from mysql is empty...
-#so the program is about to move into the delete () 
-
-# this is the delete function 
-# Deleting #
-def delete():
-    rows = sheet.rows
-    row_ids = [row.id for row in rows]
-    ss.Sheets.delete_rows(sheet_id, row_ids)
-    print("All rows deleted successfully.")
+#now i want to perform delete, when i should perform delete is, if the row of a sheet is not in mysql table row.
+#so, now i am adding a extra row to the sheet , check what will happen.
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/415d4dd4-2013-42b7-bbfe-b1cfe1b8a1e4)
+#so, now the row 101 is manually added by the user,now run the code again.
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/2a9cb804-d2ea-4949-abb0-bf7281adf3cf)
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/e820b97c-4fc5-449d-96ec-5e322dba2e58)
+#the row which is not in mysql is deleted
+#And Finally the update function works with delete and insert as well,
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/5f6e23b4-426b-4109-b405-58a5016ab98e)
 
 
-# inside this delete ()
-#sheet rows will be deleted with the help of the row ids 
-#and finally all the rows of a sheet were successfully deleted 
-#now insert() and delete() done
 
-# if i want to update the cells of sheet because of the changes of mysql records .
-#i will move into the update() 
-#when i will move into the update() is if and only if the cells of the sheet need to be  changed according to the mysql records
-#let's take a scenario the sheets data were changed by another user but it is not updated to the mysql records for this the program will #check and perform the any updation of sheets.
 
-else:
-    print("There Could be a Possibility of Updating the Sheet Cells")
-    print("Comparing the Sheet with mysql records")
-    update()
-    print("processed")
-    
-    
-# this is the update function 
-# Updating #
-def update():
-    rows_to_update = []
-    for index, row in df.iterrows():
-        for sheet_row in sheet_rows:
-            if sheet_row.row_number == index+1:
-                cells_to_update = []
-                for col in sheet.columns:
-                    if col.title in row.index and str(row[col.title]) != sheet_row.get_column(col.id).value:
-                        cell = smartsheet.models.Cell({
-                            'column_id': col.id,
-                            'value': str(row[col.title])
-                        })
-                        cells_to_update.append(cell)
-                if cells_to_update:
-                    updated_row = smartsheet.models.Row({
-                        'id': sheet_row.id,
-                        'cells': cells_to_update
-                    })
-                    rows_to_update.append(updated_row)
-                    break
-    if rows_to_update:
-        ss.Sheets.update_rows(sheet_id, rows_to_update)
-        print("Updated successfully")
-    else:
-        print("No rows to update! So, Skipping the Update Operation")
-        
-        
-#this update function will compare the dataframes from mysql and sheets row by row and checks the cell value of each as it same to the #mysql dataframes if it not same it will proceed further and finally the program will show updated succesfully if there is updation
-#otherwise it show no rows to update because of the same records those are not mismatching
-![image](https://user-images.githubusercontent.com/90912183/237022788-124848d7-a2a9-46ef-883b-20d2d31a61ad.png)
-#above image row 6 of employee were changed , when i perform the update() it will  change the value according to the mysql
-#after changed
-![image](https://user-images.githubusercontent.com/90912183/237023474-223bba25-fbee-4043-bfdc-c9dc6a95cd9f.png)
+
+
+
 
 
