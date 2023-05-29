@@ -9,7 +9,8 @@ This Project is Based on Automating the insertion/deletion/updation of sheets wi
 # then load the configuration file 
 config = json.load(open('config.json'))
 
-#why i am using the config file here for,whenever if we want to change our mysql server or database we dont move into code ,instead of we change the path or anything in the config file itself.
+#why i am using the config file here for,whenever if we want to change our mysql server or database we dont move into code,instead of we change the path or anything in the config file itself.
+
 ![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/3a86820a-ca81-421f-8564-302680f46d93)
 
 
