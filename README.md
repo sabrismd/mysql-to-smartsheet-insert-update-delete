@@ -10,39 +10,23 @@ This Project is Based on Automating the insertion/deletion/updation of sheets wi
 config = json.load(open('config.json'))
 
 #why i am using the config file here for,whenever if we want to change our mysql server or database we dont move into code ,instead of we change the path or anything in the config file itself.
-#assigning new variable for "config['dev']"
-dev=config['dev']
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/3a86820a-ca81-421f-8564-302680f46d93)
 
-#configuring the mysql to make connection to the server
-MysqlConfig=dev['mysql']
-
-#configuring for smartsheet
-SheetConfig=dev['smartsheet']
-
-#configuration for accessing the mysql table
-MysqlTableConfig =dev['sync']['mysqlTable']
 
 # sql connection
-connection = mysql.connector.connect(host=MysqlConfig['host'],
-                             user=MysqlConfig['username'],
-                             password=MysqlConfig['password'],
-                             db=MysqlConfig['databaseName'])
-    
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/520d27a0-fde0-47b2-8b04-c9736d813cfe)
+
 # Accessing The Sheet
-AccessToken=SheetConfig['access_token']
-SheetClient=smartsheet.Smartsheet(AccessToken)
-sheet_id=SheetConfig['sheet_id']
-sheet=SheetClient.Sheets.get_sheet(sheet_id)
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/3dbeb418-166e-4b16-8ab9-b8f7c6a5e93a)
+
 
 #here i am using pandas library for data visualizing and analysing pandas have a method that is read_sql() inside i must provide the
 query , and my connection Eg: "pd.read_sql(query,connection)"
 
 # by using the pandas i can access the datas 
 
-query = f"SELECT * FROM {MysqlTableConfig} LIMIT 100 OFFSET 120" # if your table records are more you can use the limit and offset keys in the query variable
-df=pd.read_sql(query,connection)
-df=df.replace(r'^\s*$',0,regex=True)
-sheet_rows=sheet.rows
+![image](https://github.com/sabrismd/mysql-to-smartsheet-insert-update-delete/assets/90912183/a66e1c19-8c1f-4feb-94da-dfd89afccb16)
+
 
 #i am applying the regular expression concept because some tables has blank spaces not none values , so i am using the "\s" for blankspace and i am replacing it with the 0 , 
 #why i am using this regular expression is because i could not complete the update function() properly . so  i am using it
