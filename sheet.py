@@ -60,8 +60,6 @@ def insert(initial_row_value):
         new_row.cells = cells
         response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
         isInsert=True
-    
-###
 
 # Deleting #
 def delete(to_be_deleted_row_value):
