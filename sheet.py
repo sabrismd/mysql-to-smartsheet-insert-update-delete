@@ -5,7 +5,7 @@ import json as js
 
 #load configuration file 
 
-config = js.load(open('config.json'))
+config = js.load(open('C:/Users/ELCOT/Desktop/SmartSheet I U D/SmartSheet/config.json'))
 
 
 #Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
@@ -31,7 +31,7 @@ AccessToken=SheetConfig['access_token']
 SheetClient=smartsheet.Smartsheet(AccessToken)
 sheet_id=SheetConfig['sheet_id']
 sheet=SheetClient.Sheets.get_sheet(sheet_id)
-query = f"SELECT * FROM {MysqlTableConfig} LIMIT 200 OFFSET 100" # if your table records are more you can use the limit and offset keys in the query variable
+query = f"SELECT * FROM {MysqlTableConfig} LIMIT 100 OFFSET 100" # if your table records are more you can use the limit and offset keys in the query variable
 df=pd.read_sql(query,connection)
 df=df.replace(r'^\s*$',0,regex=True)
 df=df.sort_values(by='id', ascending=True)
