@@ -31,10 +31,14 @@ AccessToken=SheetConfig['access_token']
 SheetClient=smartsheet.Smartsheet(AccessToken)
 sheet_id=SheetConfig['sheet_id']
 sheet=SheetClient.Sheets.get_sheet(sheet_id)
-query = f"SELECT * FROM {MysqlTableConfig}" # if your table records are more you can use the limit and offset keys in the query variable
+query = f"SELECT * FROM {MysqlTableConfig} LIMIT 200 OFFSET 100" # if your table records are more you can use the limit and offset keys in the query variable
 df=pd.read_sql(query,connection)
 df=df.replace(r'^\s*$',0,regex=True)
+df=df.sort_values(by='id', ascending=True)
 sheet_rows=sheet.rows
+isUpdate=False
+isInsert=False
+isDelete=False
 
 
 # Inserting #
@@ -55,10 +59,7 @@ def insert(initial_row_value):
         new_row.to_bottom = True
         new_row.cells = cells
         response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
-        if response.message == 'SUCCESS':
-            print("Row added successfully.")
-        else:
-            print("Failed to add row.")
+        isInsert=True
     
 ###
 
@@ -69,6 +70,7 @@ def delete(to_be_deleted_row_value):
         if (str(row.cells[0].value)) == to_be_deleted_row_value :
             SheetClient.Sheets.delete_rows(sheet_id,row.id)
             print("row were deleted")
+            isDelete=True
 
 
 ###
@@ -93,40 +95,44 @@ def update():
                     })
                     rows_to_update.append(updated_row)
     SheetClient.Sheets.update_rows(sheet_id, rows_to_update)
+    if rows_to_update:
+        isUpdate=True
+    else:
+        isUpdate=False
         
                     
 ###
 
 # Skipping the operations
 ###
+df_rows = [str(row[0]) for index, row in df.iterrows()]
+SheetRows = [rows.cells[0].value for rows in sheet.rows]
+for x in df_rows:
+     if x not in SheetRows:
+        insert(x)
+        isInsert=True
+for y in SheetRows:
+    if y not in df_rows:
+        delete(y)
+        isDelete=True
+        
+if isInsert:
+    print("Row(s) Only Inserted to the sheet")
+elif isDelete:
+    print("unnecessary row deleted from the sheet")
+elif isUpdate:
+    update()
+    print("Sheet Updated")
 
-if df.any:
-        df_rows = [str(row[0]) for index, row in df.iterrows()]
-        SheetRows = [rows.cells[0].value for rows in sheet.rows]
-        isUpdate=False
-        isInsert=False
-        isDelete=False
-        for x in df_rows:
-            if x in SheetRows:
-                update()
-                isUpdate=True
-            elif x not in SheetRows:
-                insert(x)
-                isInsert=True
-        for y in SheetRows:
-            if y not in df_rows:
-                delete(y)
-                isDelete=True
-        if isUpdate and isDelete:
-            print("Row(s) deleted from the sheet and also Sheet Updated With Mysql Table")
-        elif isUpdate and isInsert:
-            print('Row(s) inserted to the sheet and also Sheet Updated With Mysql Table')
-        elif isInsert:
-            print("Rows only Inserted to the sheet")
-        elif isUpdate:
-            print('Sheet Usually Updated')
-        elif isDelete:
-            print("row only deleted from the sheet") 
+
+column_id = sheet.columns[0].id
+sort_specifier = smartsheet.models.SortSpecifier({
+    'sortCriteria': [{
+        'columnId': column_id,
+        'ascending': True
+    }]
+})
+SheetClient.Sheets.sort_sheet(sheet_id, sort_specifier)
 
 
 #loop through data from MYSQL
