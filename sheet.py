@@ -5,7 +5,7 @@ import json as js
 
 #load configuration file 
 
-config = js.load(open('C:/Users/ELCOT/Desktop/SmartSheet I U D/SmartSheet/config.json'))
+config = js.load(open('config.json'))
 
 #Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
 dev=config['dev']
