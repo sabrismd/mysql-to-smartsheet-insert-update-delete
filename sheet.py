@@ -35,7 +35,6 @@ df=pd.read_sql(query,connection)
 df=df.replace(r'^\s*$',0,regex=True)
 df=df.sort_values(by='id', ascending=True)
 sheet_rows=sheet.rows
-isUpdate=False
 isInsert=False
 isDelete=False
 
@@ -58,8 +57,7 @@ def insert(initial_row_value):
         new_row.to_bottom = True
         new_row.cells = cells
         response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
-    rows=sheet_rows
-    isInsert=True
+        isInsert=True
     ###
 
 
@@ -69,7 +67,7 @@ def delete(to_be_deleted_row_value):
     for row in rows:
         if (str(row.cells[0].value)) == to_be_deleted_row_value :
             SheetClient.Sheets.delete_rows(sheet_id,row.id)
-    isDelete=True
+            isDelete=True
     
 # Updating #
 def update():
@@ -92,10 +90,6 @@ def update():
                     })
                     rows_to_update.append(updated_row)
     SheetClient.Sheets.update_rows(sheet_id, rows_to_update)
-    if rows_to_update:
-        isUpdate=True
-    else:
-        isUpdate=False
     
     
                     
@@ -108,11 +102,9 @@ SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
 for x in df_rows:
     if x not in SheetRows:
         insert(x)
-        isInsert=True
 for y in SheetRows:
     if y not in df_rows:
         delete(y)
-        isDelete=True
 
 
 if isInsert:
@@ -122,9 +114,6 @@ elif isDelete:
 else:
     update()
     print("Sheet Updated")
-
-for ro in sheet.rows:
-    int(ro.cells[0].value)
 column_id = sheet.columns[0].id
 sort_specifier = smartsheet.models.SortSpecifier({
     'sortCriteria': [{
