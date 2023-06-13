@@ -42,9 +42,8 @@ isDelete=False
 # Inserting #
 def insert(initial_row_value):
     MysqlLists = [str(row[0]) for index, row in df.iterrows()]
-    init_value=int(initial_row_value)
     if initial_row_value in MysqlLists:
-        row_values = df[df['id'] == init_value].values.tolist()
+        row_values = df[df['id'] == int(initial_row_value)].values.tolist()
         cells = []
         col_ids = [col.id for col in sheet.columns]
         for i in range(len(col_ids)):
@@ -56,8 +55,7 @@ def insert(initial_row_value):
         new_row = smartsheet.models.Row()
         new_row.to_bottom = True
         new_row.cells = cells
-        response = SheetClient.Sheets.add_rows(sheet_id, [new_row])
-        isInsert=True
+        SheetClient.Sheets.add_rows(sheet_id, [new_row])
     ###
 
 
@@ -67,7 +65,6 @@ def delete(to_be_deleted_row_value):
     for row in rows:
         if (str(row.cells[0].value)) == to_be_deleted_row_value :
             SheetClient.Sheets.delete_rows(sheet_id,row.id)
-            isDelete=True
     
 # Updating #
 def update():
@@ -102,23 +99,20 @@ SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
 for x in df_rows:
     if x not in SheetRows:
         insert(x)
+        isInsert=True
 for y in SheetRows:
     if y not in df_rows:
         delete(y)
+        isDelete=True
 
 
-if isInsert:
+if isInsert and isDelete:
+    print("Row(s) inserted and deleted from the sheet")
+elif isInsert:
     print("Row(s) Only Inserted to the sheet")
 elif isDelete:
     print("unnecessary row deleted from the sheet")
 else:
     update()
     print("Sheet Updated")
-column_id = sheet.columns[0].id
-sort_specifier = smartsheet.models.SortSpecifier({
-    'sortCriteria': [{
-        'columnId': column_id,
-        'ascending': True
-    }]
-})
-SheetClient.Sheets.sort_sheet(sheet_id, sort_specifier)
+
