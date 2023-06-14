@@ -5,7 +5,7 @@ import json as js
 
 #load configuration file 
 
-config = js.load(open('config.json'))
+config = js.load(open('C:/Users/ELCOT/Desktop/SmartSheet I U D/SmartSheet/config.json'))
 
 #Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
 dev=config['dev']
@@ -37,10 +37,11 @@ df=df.sort_values(by='id', ascending=True)
 sheet_rows=sheet.rows
 isInsert=False
 isDelete=False
-
+isUpdate=False
 
 # Inserting #
 def insert(initial_row_value):
+    global isInsert
     MysqlLists = [str(row[0]) for index, row in df.iterrows()]
     if initial_row_value in MysqlLists:
         row_values = df[df['id'] == int(initial_row_value)].values.tolist()
@@ -56,41 +57,55 @@ def insert(initial_row_value):
         new_row.to_bottom = True
         new_row.cells = cells
         SheetClient.Sheets.add_rows(sheet_id, [new_row])
+        isInsert=True
     ###
 
 
 # Deleting #
 def delete(to_be_deleted_row_value):
+    global isDelete
     rows=sheet.rows
     for row in rows:
         if (str(row.cells[0].value)) == to_be_deleted_row_value :
             SheetClient.Sheets.delete_rows(sheet_id,row.id)
+            isDelete=True
     
 # Updating #
-def update():
-    rows_to_update = []
-    for index, row in df.iterrows():
-        for sheet_row in sheet_rows:
-            if sheet_row.row_number == index+1:
-                cells_to_update = []
-                for col in sheet.columns:
-                    if col.title in row.index and str(row[col.title]) != sheet_row.get_column(col.id).value:
-                        cell = smartsheet.models.Cell({
-                            'column_id': col.id,
-                            'value': str(row[col.title])
-                        })
-                        cells_to_update.append(cell)
-                if cells_to_update:
-                    updated_row = smartsheet.models.Row({
-                        'id': sheet_row.id,
-                        'cells': cells_to_update
-                    })
-                    rows_to_update.append(updated_row)
-    SheetClient.Sheets.update_rows(sheet_id, rows_to_update)
-    
-    
-                    
-###
+def update(up):
+    global isUpdate
+    row_values = []
+    row_id = ''
+    col_ids = []
+    index = -1
+    col_id = ''
+    df_row_values = df[df['id'] == int(up)].values.tolist()
+    df_row_values2 = [str(i) for i in df_row_values[0]]
+    for row in sheet_rows:
+        if row.cells[0].value == up:
+            res = SheetClient.Sheets.get_row(sheet_id, row.id)
+            row_id = row.id
+            for cell in res.cells:
+                row_values.append(cell.value)
+                col_ids.append(cell.column_id)
+    for i in row_values:
+        if i not in df_row_values2:
+            index = row_values.index(i)
+            for j in range(len(col_ids)):
+                if j == index:
+                    col_id = col_ids[j]
+    if index != -1:
+        new_cell = smartsheet.models.Cell()
+        new_cell.column_id = col_id
+        new_cell.value = df_row_values2[index]
+        new_row = smartsheet.models.Row()
+        new_row.id = row_id
+        new_row.cells.append(new_cell)
+        SheetClient.Sheets.update_rows(sheet_id, [new_row])
+        isUpdate=True
+    if row_values != df_row_values2:
+        update(up)
+    else:
+        isUpdate=False
 
 # Skipping the operations
 ###
@@ -99,20 +114,18 @@ SheetRows = [str(rows.cells[0].value) for rows in sheet.rows]
 for x in df_rows:
     if x not in SheetRows:
         insert(x)
-        isInsert=True
+    else:
+        update(x)
 for y in SheetRows:
     if y not in df_rows:
         delete(y)
-        isDelete=True
-
-
-if isInsert and isDelete:
-    print("Row(s) inserted and deleted from the sheet")
-elif isInsert:
+        
+if isInsert:
     print("Row(s) Only Inserted to the sheet")
 elif isDelete:
     print("unnecessary row deleted from the sheet")
-else:
-    update()
+elif isUpdate:
     print("Sheet Updated")
-
+else:
+    print("No Need To Do,Both Mysql and SmartSheet Has Same Records")
+    
