@@ -5,7 +5,7 @@ import json as js
 
 #load configuration file 
 
-config = js.load(open('C:/Users/ELCOT/Desktop/SmartSheet I U D/SmartSheet/config.json'))
+config = js.load(open('config.json'))
 
 #Comments: use dev varaible and from dev variable derive the MysqlConfi,SheetConfig and  MysqlTableConfig
 dev=config['dev']
@@ -76,8 +76,6 @@ def update(up):
     row_values = []
     row_id = ''
     col_ids = []
-    index = -1
-    col_id = ''
     df_row_values = df[df['id'] == int(up)].values.tolist()
     df_row_values2 = [str(i) for i in df_row_values[0]]
     for row in sheet_rows:
@@ -87,26 +85,16 @@ def update(up):
             for cell in res.cells:
                 row_values.append(cell.value)
                 col_ids.append(cell.column_id)
-    for i in row_values:
-        if i not in df_row_values2:
-            index = row_values.index(i)
-            for j in range(len(col_ids)):
-                if j == index:
-                    col_id = col_ids[j]
-    if index != -1:
-        new_cell = smartsheet.models.Cell()
-        new_cell.column_id = col_id
-        new_cell.value = df_row_values2[index]
-        new_row = smartsheet.models.Row()
-        new_row.id = row_id
-        new_row.cells.append(new_cell)
-        SheetClient.Sheets.update_rows(sheet_id, [new_row])
-        isUpdate=True
-    if row_values != df_row_values2:
-        update(up)
-    else:
-        isUpdate=False
-
+    if df_row_values2 != row_values:
+        for i, j in zip(range(len(df_row_values2)), range(len(col_ids))):
+            new_cell = smartsheet.models.Cell()
+            new_row = smartsheet.models.Row()
+            new_row.id = row_id
+            new_cell.column_id = col_ids[j]
+            new_cell.value = df_row_values2[i]
+            new_row.cells.append(new_cell)
+            SheetClient.Sheets.update_rows(sheet_id, [new_row])
+            isUpdate = True
 # Skipping the operations
 ###
 df_rows = [str(row[0]) for index, row in df.iterrows()]
