@@ -2,20 +2,24 @@
   "environment": "dev",
   "dev": {
     "mysql": {
-      "host": "",
+      "host": "localhost",
       "port": "",
       "username": "",
-      "password": "",
+      "password": "***",
       "databaseName": ""
     },
     "smartsheet": {
-      "access_token": "",
-	  "sheet_id":""
+      "access_token": " "
     },
-    "sync":{
+    "sync":[
+	{
         "mysqlTable": "",
-        "smartsheet": ""
-      }
+        "sheet_id": ""
+	},
+	{
+	"mysqlTable": "",
+        "sheet_id": ""
+	}
+    ]	
   }
 }
-			
