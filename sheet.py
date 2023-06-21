@@ -30,10 +30,11 @@ for i in range(len(Mysql_Sheet_Sync)):
     sync=Mysql_Sheet_Sync[i]
     sheet_id=sync['sheet_id']
     sheet=SheetClient.Sheets.get_sheet(sheet_id)
-    query = f"SELECT * FROM {sync['mysqlTable']}" # if your table records are more you can use the limit and offset keys in the query variable
+    query = f"SELECT * FROM {sync['mysqlTable']}"
     df=pd.read_sql(query,connection)
-    df.replace(r'^\s*$',0,regex=True)
-    df.sort_values(by='id',ascending=True)
+    df=df.replace(r'^\s*$',0,regex=True)
+    df=df.sort_values(by=df.columns[0])
+    initial_column=df.columns[0]
     sheet_rows=sheet.rows
     sheet_columns=sheet.columns
     isInsert=False
@@ -45,7 +46,7 @@ for i in range(len(Mysql_Sheet_Sync)):
         global isInsert
         MysqlLists = [str(row[0]) for index, row in df.iterrows()]
         if initial_row_value in MysqlLists:
-            row_values = df[df['id'] == int(initial_row_value)].values.tolist()
+            row_values = df[df[initial_column] == int(initial_row_value)].values.tolist()
             cells = []
             col_ids = [col.id for col in sheet_columns]
             for i in range(len(col_ids)):
@@ -76,7 +77,7 @@ for i in range(len(Mysql_Sheet_Sync)):
         row_values = []
         row_id = ''
         col_ids = []
-        df_row_values = df[df['id'] == int(up)].values.tolist()
+        df_row_values = df[df[initial_column] == int(up)].values.tolist()
         df_row_values2 = [str(i) for i in df_row_values[0]]
         for row in sheet_rows:
             if row.cells[0].value == up:
